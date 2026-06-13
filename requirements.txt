@@ -1,0 +1,2 @@
+agent-passport-system>=2.4.0a2
+clickhouse-connect>=0.7
