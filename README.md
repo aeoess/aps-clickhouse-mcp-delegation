@@ -33,17 +33,20 @@ These compose with the pass-through. They do not replace it.
 
 ```
 pip install agent-passport-system clickhouse-connect
-python examples/run_demo.py
 ```
 
-ClickHouse connection comes from `CLICKHOUSE_URL`, `CLICKHOUSE_USER`,
-`CLICKHOUSE_PASSWORD`, defaulting to `http://localhost:8123`. A local server
-is enough:
+A local ClickHouse is enough. Start one and point the demo at it with the
+same password on both sides:
 
 ```
 docker run -d --name ch -p 8123:8123 -e CLICKHOUSE_PASSWORD=demo clickhouse/clickhouse-server
-CLICKHOUSE_PASSWORD=demo python examples/run_demo.py
+export CLICKHOUSE_URL=http://localhost:8123 CLICKHOUSE_PASSWORD=demo
+python examples/run_demo.py
+python examples/tamper_demo.py
 ```
+
+Connection is read from `CLICKHOUSE_URL`, `CLICKHOUSE_USER`, and
+`CLICKHOUSE_PASSWORD`.
 
 The demo issues a read-only delegation to an agent, dispatches four tool
 calls, and writes one signed boundary receipt per call into ClickHouse:
