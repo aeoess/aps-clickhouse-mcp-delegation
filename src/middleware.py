@@ -58,54 +58,6 @@ def decide(delegation: dict, tool_name: str):
     return permitted, required, reason
 
 
-def permit_receipt(
-    delegation: dict,
-    agent_id: str,
-    tool_name: str,
-    target: str,
-    scope_used: str,
-    agent_private_key: str,
-) -> dict:
-    """A signed action receipt for an authorized tool call."""
-    return ap.create_action_receipt(
-        agent_id=agent_id,
-        delegation=delegation,
-        action_type=tool_name,
-        target=target,
-        scope_used=scope_used,
-        result_status="permitted",
-        result_summary=f"{tool_name} authorized by delegation {delegation['delegationId']}",
-        private_key=agent_private_key,
-    )
-
-
-def deny_record(
-    delegation: dict,
-    agent_id: str,
-    tool_name: str,
-    target: str,
-    required_scope: str,
-    reason: str,
-    agent_private_key: str,
-) -> dict:
-    """
-    A signed record of a refusal. The protocol will not issue an action
-    receipt for a denied action, so the deny is recorded as a signed action
-    receipt with result_status 'denied': the refusal itself is attributable
-    and tamper evident, which is the property an auditor needs.
-    """
-    return ap.create_action_receipt(
-        agent_id=agent_id,
-        delegation=delegation,
-        action_type=tool_name,
-        target=target,
-        scope_used=required_scope,
-        result_status="denied",
-        result_summary=f"{tool_name} denied: {reason}; delegation scope {delegation.get('scope')}",
-        private_key=agent_private_key,
-    )
-
-
 def clickhouse_overrides_from_delegation(delegation: dict, base_user: str) -> dict:
     """
     Derive ClickHouse client config overrides from the delegation. The

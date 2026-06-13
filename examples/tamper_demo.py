@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import agent_passport as ap
 from agent_passport.v2.accountability.types import ScopeOfClaim
 import clickhouse_connect
+from clickhouse_connect.driver.exceptions import DatabaseError
 
 
 def ch_client():
@@ -24,11 +25,24 @@ def ch_client():
     rest = url.split("://", 1)[1]
     host = rest.split(":")[0]
     port = int(rest.rsplit(":", 1)[1]) if ":" in rest else (8443 if secure else 8123)
-    return clickhouse_connect.get_client(
-        host=host, port=port, secure=secure,
-        username=os.environ.get("CLICKHOUSE_USER", "default"),
-        password=os.environ.get("CLICKHOUSE_PASSWORD", ""),
-    )
+    try:
+        return clickhouse_connect.get_client(
+            host=host, port=port, secure=secure,
+            username=os.environ.get("CLICKHOUSE_USER", "default"),
+            password=os.environ.get("CLICKHOUSE_PASSWORD", ""),
+        )
+    except DatabaseError as e:
+        msg = str(e)
+        if "REQUIRED_PASSWORD" in msg or "Authentication failed" in msg or "code: 194" in msg:
+            print(
+                "[error] ClickHouse rejected the connection: authentication failed. "
+                "Set CLICKHOUSE_PASSWORD (and CLICKHOUSE_USER if your server needs it) "
+                "to match your server, then rerun. See the README 'Run it' section for "
+                "the exact docker and env setup.",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        raise
 
 
 def rebuild(rc):
